@@ -1,0 +1,31 @@
+#使用 dataset.csv数据集完成文本分类操作，需要尝试2种不同的模型。#
+from itertools import count
+
+from sklearn import linear_model
+from sklearn import datasets
+from sklearn import tree
+from sklearn.model_selection import train_test_split
+
+date = datasets.load_iris()
+X = date.data
+y = date.target
+
+model = linear_model.LogisticRegression(max_iter=1000)
+model.fit(X, y)
+print(model)
+
+train_x, test_x, train_y, test_y = train_test_split(X,y)
+print(train_y)
+print(test_y)
+
+model = linear_model.LogisticRegression(max_iter=1000)
+model.fit(train_x,train_y)
+prediction = model.predict(test_x)
+print("预测",prediction)
+
+print ("预测结果 ", (test_y == prediction).sum(), len(test_x))
+
+model = tree.DecisionTreeClassifier()
+model.fit(train_x,train_y)
+prediction = model.predict(test_x)
+print("tree 预测结果",(test_y == prediction).sum(), len(test_x))
