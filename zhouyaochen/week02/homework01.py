@@ -6,6 +6,18 @@ import torch.optim as optim
 """
 调整 09_深度学习文本分类.py 代码中模型的层数和节点个数，对比模型的loss变化。
 demo中是一个隐藏层 训练10次 神经元128个
+训练三次结果输出:
+第一次:
+输入 '帮我导航到北京' 
+预测为: 'HomeAppliance-Control' 
+输入 '明天天气如何' 预测为: 'Music-Play' 
+第二次的输出结果是：
+输入 '帮我导航到北京' 预测为: 'Alarm-Update' 
+输入 '明天天气如何' 预测为: 'Alarm-Update' 
+第三次的输出结果是：
+输入 '帮我导航到北京' 预测为: 'Weather-Query' 
+输入 '明天天气如何' 预测为: 'Weather-Query'
+
 每次训练之后的结果 都不相同
 原因分析：
 1.模型 SimpleClassifier 里用了 nn.Linear，PyTorch 会默认 随机初始化权重。
@@ -17,6 +29,9 @@ demo中是一个隐藏层 训练10次 神经元128个
 3.神经元个数调整为256
 4.训练轮数调整为100轮
 5.学习率调整
+调整后 预测结果明显更为准确:
+输入 '帮我导航到北京' 预测为: 'Travel-Query'
+输入 '明天天气如何' 预测为: 'Weather-Query'
 """
 dataset = pd.read_csv("../Week02/dataset.csv", sep="\t", header=None)
 texts = dataset[0].tolist() # 数据集第一列 文本
@@ -143,7 +158,7 @@ def classify_text(text, model, char_to_index, vocab_size, max_len, index_to_labe
 
 index_to_label = {i: label for label, i in label_to_index.items()}
 
-new_text = "我想看周杰伦的演唱会"
+new_text = "帮我导航到北京"
 predicted_class = classify_text(new_text, model, char_to_index, vocab_size, max_len, index_to_label)
 print(f"输入 '{new_text}' 预测为: '{predicted_class}'")
 
