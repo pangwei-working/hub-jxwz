@@ -10,7 +10,7 @@ dataset = pd.read_csv("dataset.csv", sep = "\t", header=None)
 # 数据集划分
 X = dataset[0]
 y = dataset[1]
-tran_x, text_x, tran_y, text_y = train_test_split(X, y, random_state=666)
+tran_x, text_x, tran_y, text_y = train_test_split(X, y, random_state = 666)
 # 训练数据处理
 tran_sentence = tran_x.apply(lambda x: " ".join(jieba.lcut(x)))
 # 训练数据特征提取
