@@ -1,3 +1,4 @@
+
 import jieba
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
@@ -54,4 +55,3 @@ print("待预测的文本", test_query)
 print("KNN模型预测结果: ", KNN_model.predict(test_feature))
 print("逻辑回归模型预测结果: ", Linear_model.predict(test_feature))
 print("决策树模型预测结果: ", DecisionTree_model.predict(test_feature))
-
