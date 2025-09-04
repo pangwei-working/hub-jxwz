@@ -13,7 +13,8 @@ bert_tune_proj/
 ├── assets
 │   ├──models/           #google-bert-chinese model
 │   ├──waimai_10k.csv     #数据集
-│   └──post_data.json     #AB测试用内容
+│   ├──post_data_multi.json  #AB测试用内容
+│   └──post_data.json        #AB测试用内容
 ├── README.md             #使用说明，存在的问题等
 └── train.py            # 训练入口脚本 
 
@@ -26,29 +27,31 @@ Some weights of BertForSequenceClassification were not initialized from the mode
 You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
 Using device: cpu
 ------------Epoch: 0 ----------------
-Epoch: 0, Average training loss: 0.7372
-Accuracy: 1.0000
-Average testing loss: 0.0956
+Epoch: 0, Average training loss: 1.5514
+Accuracy: 0.7768
+Average testing loss: 0.8642
 -------------------------------
 Model saved to ./app/models/bert-finetuned-epoch0
-🎉 新的最佳模型保存，准确率: 1.0000
+🎉 新的最佳模型保存，准确率: 0.7768
 ------------Epoch: 1 ----------------
-Epoch: 1, Average training loss: 0.0380
-Accuracy: 1.0000
-Average testing loss: 0.0061
+Epoch: 1, Average training loss: 0.5954
+Accuracy: 0.8929
+Average testing loss: 0.3957
 -------------------------------
+Model saved to ./app/models/bert-finetuned-epoch1
+🎉 新的最佳模型保存，准确率: 0.8929
 ------------Epoch: 2 ----------------
-Epoch: 2, Average training loss: 0.0037
-Accuracy: 1.0000
-Average testing loss: 0.0013
+Epoch: 2, Average training loss: 0.2657
+Accuracy: 0.8929
+Average testing loss: 0.4232
 -------------------------------
 ------------Epoch: 3 ----------------
-Epoch: 3, Average training loss: 0.0012
-Accuracy: 1.0000
-Average testing loss: 0.0007
+Epoch: 3, Average training loss: 0.1442
+Accuracy: 0.8750
+Average testing loss: 0.6480
 -------------------------------
 
-训练完成！最佳准确率: 1.0000
+训练完成！最佳准确率: 0.8929
 
 ### run service
 cd ~/work/bert_tune_proj
@@ -98,115 +101,107 @@ INFO:     127.0.0.1:56169 - "POST /predict/%E8%BF%99%E4%B8%AA%E4%BA%A7%E5%93%81%
 {"text":"这个产品很好用","predicted_label":"1","predicted_class":1,"confidence":0.9001}
 
 #### 3. 批量预测(还在调试阶段)
-curl -X POST "http://localhost:8000/predict" \
-  -H "Content-Type: application/json" \
-  -d '{"texts": ["这个很好", "那个不好", "一般般"]}'
-
 curl -X POST "http://localhost:8000/predict" -H "Content-Type: application/json" -d '{"texts": ["这个很好", "那个不好"]}'
+
+INFO:     127.0.0.1:58910 - "POST /predict HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51000 - "POST /predict HTTP/1.1" 200 OK
+[{"text":"这个很好","predicted_label":"1","predicted_class":1,"confidence":0.7766},{"text":"那个不好","predicted_label":"0","predicted_class":0,"confidence":0.7985}]
 
 ### AB测试结果
 
-ab -n 100 -c 1 -p ./assets/post_data.json -T "application/json" http://127.0.0.1:8000/predict
-(pytorch_d2l) 192:bert_tune_proj wenyuc$ ab -n 100 -c 1 -p ./assets/post_data.json -T "application/json" http://127.0.0.1:8000/predict
+ab -n 100 -c 1 -p ./assets/post_data_multi.json -T "application/json" http://127.0.0.1:8000/predict
 This is ApacheBench, Version 2.3 <$Revision: 1913912 $>
 Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
 Licensed to The Apache Software Foundation, http://www.apache.org/
 
-Benchmarking 127.0.0.1 (be patient)...INFO:     127.0.0.1:51669 - "POST /predict HTTP/1.0" 200 OK
-INFO:     127.0.0.1:51670 - "POST /predict HTTP/1.0" 200 OK
-......
+Benchmarking 127.0.0.1 (be patient)...predict batch: ['这个产品很好用', '好吃得没话说', '这个产品简直没法用', '还是等下一个新产品吧', '不太好吃']
 ..done
-
 
 Server Software:        uvicorn
 Server Hostname:        127.0.0.1
 Server Port:            8000
 
 Document Path:          /predict
-Document Length:        93 bytes
+Document Length:        478 bytes
 
 Concurrency Level:      1
-Time taken for tests:   3.813 seconds
+Time taken for tests:   6.173 seconds
 Complete requests:      100
 Failed requests:        0
-Total transferred:      23700 bytes
-Total body sent:        17500
-HTML transferred:       9300 bytes
-Requests per second:    26.23 [#/sec] (mean)
-Time per request:       38.130 [ms] (mean)
-Time per request:       38.130 [ms] (mean, across all concurrent requests)
-Transfer rate:          6.07 [Kbytes/sec] received
-                        4.48 kb/s sent
-                        10.55 kb/s total
+Total transferred:      62300 bytes
+Total body sent:        29000
+HTML transferred:       47800 bytes
+Requests per second:    16.20 [#/sec] (mean)
+Time per request:       61.726 [ms] (mean)
+Time per request:       61.726 [ms] (mean, across all concurrent requests)
+Transfer rate:          9.86 [Kbytes/sec] received
+                        4.59 kb/s sent
+                        14.44 kb/s total
 
 Connection Times (ms)
               min  mean[+/-sd] median   max
 Connect:        0    0   0.0      0       0
-Processing:    34   38  10.3     36     136
-Waiting:       34   38  10.3     36     135
-Total:         34   38  10.3     36     136
+Processing:    57   62   6.2     60     109
+Waiting:       57   61   6.2     60     109
+Total:         58   62   6.2     60     109
 
 Percentage of the requests served within a certain time (ms)
-  50%     36
-  66%     37
-  75%     37
-  80%     38
-  90%     40
-  95%     44
-  98%     57
-  99%    136
- 100%    136 (longest request)
+  50%     60
+  66%     61
+  75%     62
+  80%     62
+  90%     64
+  95%     73
+  98%     82
+  99%    109
+ 100%    109 (longest request)
 
-$ab -n 100 -c 5 -p ./assets/post_data.json -T "application/json" http://127.0.0.1:8000/predict
-(pytorch_d2l) 192:bert_tune_proj wenyuc$ ab -n 100 -c 5 -p ./assets/post_data.json -T "application/json" http://127.0.0.1:8000/predict
+$ab -n 100 -c 5 -p ./assets/post_data_multi.json -T "application/json" http://127.0.0.1:8000/predict
 This is ApacheBench, Version 2.3 <$Revision: 1913912 $>
 Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
 Licensed to The Apache Software Foundation, http://www.apache.org/
 
-Benchmarking 127.0.0.1 (be patient)...INFO:     127.0.0.1:52001 - "POST /predict HTTP/1.0" 200 OK
-INFO:     127.0.0.1:52002 - "POST /predict HTTP/1.0" 200 OK
-......
+Benchmarking 127.0.0.1 (be patient)...INFO:     127.0.0.1:52141 - "POST /predict HTTP/1.0" 200 OK
 ..done
-
 
 Server Software:        uvicorn
 Server Hostname:        127.0.0.1
 Server Port:            8000
 
 Document Path:          /predict
-Document Length:        93 bytes
+Document Length:        478 bytes
 
 Concurrency Level:      5
-Time taken for tests:   3.711 seconds
+Time taken for tests:   6.702 seconds
 Complete requests:      100
 Failed requests:        0
-Total transferred:      23700 bytes
-Total body sent:        17500
-HTML transferred:       9300 bytes
-Requests per second:    26.95 [#/sec] (mean)
-Time per request:       185.545 [ms] (mean)
-Time per request:       37.109 [ms] (mean, across all concurrent requests)
-Transfer rate:          6.24 [Kbytes/sec] received
-                        4.61 kb/s sent
-                        10.84 kb/s total
+Total transferred:      62300 bytes
+Total body sent:        29000
+HTML transferred:       47800 bytes
+Requests per second:    14.92 [#/sec] (mean)
+Time per request:       335.118 [ms] (mean)
+Time per request:       67.024 [ms] (mean, across all concurrent requests)
+Transfer rate:          9.08 [Kbytes/sec] received
+                        4.23 kb/s sent
+                        13.30 kb/s total
 
 Connection Times (ms)
               min  mean[+/-sd] median   max
 Connect:        0    0   0.1      0       0
-Processing:    55  180  42.8    176     274
-Waiting:       34  119  53.6    128     273
-Total:         55  180  42.8    176     274
+Processing:    85  325  61.7    320     463
+Waiting:       61  235  88.3    252     434
+Total:         85  326  61.7    320     463
 
 Percentage of the requests served within a certain time (ms)
-  50%    176
-  66%    183
-  75%    198
-  80%    212
-  90%    244
-  95%    274
-  98%    274
-  99%    274
- 100%    274 (longest request)
+  50%    320
+  66%    336
+  75%    345
+  80%    348
+  90%    412
+  95%    434
+  98%    463
+  99%    463
+ 100%    463 (longest request)
 
 (pytorch_d2l) 192:bert_tune_proj wenyuc$ ab -n 100 -c 10 -p ./assets/post_data.json -T "application/json" http://127.0.0.1:8000/predict
 This is ApacheBench, Version 2.3 <$Revision: 1913912 $>
@@ -223,39 +218,40 @@ Server Hostname:        127.0.0.1
 Server Port:            8000
 
 Document Path:          /predict
-Document Length:        93 bytes
+Document Length:        478 bytes
 
 Concurrency Level:      10
-Time taken for tests:   3.680 seconds
+Time taken for tests:   6.481 seconds
 Complete requests:      100
 Failed requests:        0
-Total transferred:      23700 bytes
-Total body sent:        17500
-HTML transferred:       9300 bytes
-Requests per second:    27.17 [#/sec] (mean)
-Time per request:       368.042 [ms] (mean)
-Time per request:       36.804 [ms] (mean, across all concurrent requests)
-Transfer rate:          6.29 [Kbytes/sec] received
-                        4.64 kb/s sent
-                        10.93 kb/s total
+Total transferred:      62300 bytes
+Total body sent:        29000
+HTML transferred:       47800 bytes
+Requests per second:    15.43 [#/sec] (mean)
+Time per request:       648.147 [ms] (mean)
+Time per request:       64.815 [ms] (mean, across all concurrent requests)
+Transfer rate:          9.39 [Kbytes/sec] received
+                        4.37 kb/s sent
+                        13.76 kb/s total
 
 Connection Times (ms)
               min  mean[+/-sd] median   max
 Connect:        0    0   0.1      0       0
-Processing:    52  360  42.9    353     446
-Waiting:       48  228 104.5    222     445
-Total:         52  360  42.9    354     446
+Processing:    86  634  95.2    623     808
+Waiting:       61  360 186.9    369     778
+Total:         86  635  95.2    624     808
 
 Percentage of the requests served within a certain time (ms)
-  50%    354
-  66%    354
-  75%    363
-  80%    375
-  90%    444
-  95%    446
-  98%    446
-  99%    446
- 100%    446 (longest request)
+  50%    624
+  66%    628
+  75%    643
+  80%    682
+  90%    779
+  95%    808
+  98%    808
+  99%    808
+ 100%    808 (longest request)
 
- ### 存在的问题
- 1. 批量预测还在继续调试
+### 存在的问题
+1. 模型增大训练样本，保存最高精度的模型还要调整
+2. API接口继续完善

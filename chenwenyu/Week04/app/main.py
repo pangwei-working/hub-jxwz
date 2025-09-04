@@ -66,7 +66,7 @@ async def startup_event():
     """启动时加载最新模型"""
     try:
         # 加载最新训练的模型
-        model_dir="./app/models/bert-finetuned-epoch0"
+        model_dir="./app/models/bert-finetuned-epoch1"
         model_path=Path(model_dir)
         print(f"尝试加载模型从: {model_path}")
         print(f"路径是否存在: {model_path.exists()}")
@@ -156,29 +156,21 @@ async def predict(request: PredictionRequest):
         raise HTTPException(status_code=400, detail="Texts cannot be empty")
     
     try:
+        #print("predict batch:", request.texts)
         results = predictor.predict(request.texts)
-        #print("predict batch:",results)
         # 安全转换NumPy类型
-        serialized_result = safe_serialize(results)
-        #print("type serialized_result:",type(serialized_result))
-        if isinstance(serialized_result, list) and len(serialized_result) > 0:
-            result = serialized_result[0]
-            
-            # 只返回关键信息
-            return [{
+        serialized_results = safe_serialize(results)
+        #print(f"type serialized_result:{type(serialized_results)}, content: {serialized_results}")
+        if isinstance(serialized_results, list) and len(serialized_results) > 0:
+            resp=[]
+            for result in serialized_results:
+                resp.append({
                 "text": result.get("text"),
                 "predicted_label": str(result.get("predicted_label")),
                 "predicted_class": result.get("predicted_class"),
                 "confidence": round(result.get("confidence", 0), 4),
-            }]
-        elif isinstance(serialized_result, dict) and len(serialized_result) > 0:
-            print(serialized_result)
-            return [{
-            "text": serialized_result.get("text"),
-            "predicted_label": str(serialized_result.get("predicted_label")),
-            "predicted_class": serialized_result.get("predicted_class"),
-            "confidence": round(serialized_result.get("confidence",0),4),
-            }]
+            })
+            return resp
         else:
             return [{"error": "No prediction result"}]
 
@@ -198,21 +190,12 @@ async def predict_single(text: str):
         #print("type serialized_result:",type(serialized_result))
         if isinstance(serialized_result, list) and len(serialized_result) > 0:
             result = serialized_result[0]
-            
             # 只返回关键信息
             return {
                 "text": text,
                 "predicted_label": str(result.get("predicted_label")),
                 "predicted_class": result.get("predicted_class"),
                 "confidence": round(result.get("confidence", 0), 4),
-            }
-        elif isinstance(serialized_result, dict) and len(serialized_result) > 0:
-            #print(serialized_result)
-            return {
-            "text": serialized_result.get("text"),
-            "predicted_label": str(serialized_result.get("predicted_label")),
-            "predicted_class": serialized_result.get("predicted_class"),
-            "confidence": round(serialized_result.get("confidence",0),4),
             }
         else:
             return {"error": "No prediction result"}

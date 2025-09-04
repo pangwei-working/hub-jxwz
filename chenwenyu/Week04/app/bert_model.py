@@ -67,18 +67,24 @@ def main_train():
     print("Label数据类型:", type(dataset['label'].values))    #numpy.ndarray
     print("review数据类型:", type(dataset['review'].iloc[:5]))  #pandas.core.series.Series
     print(dataset.head(5))
+    
+    dataset_shuffled = dataset.sample(frac=1, random_state=42).reset_index(drop=True)
+    subset = dataset_shuffled.iloc[:500]
 
     # 初始化并拟合标签编码器，将文本标签转换为数字标签（如0, 1, 2...）
     lbl = LabelEncoder()
-    lbl.fit(dataset['label'])
+    labels = lbl.fit_transform(subset['label']) #Transform labels to normalized encoding
+    unique, counts = np.unique(labels, return_counts=True)
+    print(dict(zip(unique, counts)))
 
     # 将数据按8:2的比例分割为训练集和测试集
     # stratify 参数确保训练集和测试集中各类别的样本比例与原始数据集保持一致
     x_train, x_test, train_label, test_label = train_test_split(
-        list(dataset['review'].iloc[:500]),
-        lbl.transform(dataset['label'].iloc[:500]),    #Transform labels to normalized encoding
+        list(subset['review']),
+        labels,
         test_size=0.2,
-        stratify=dataset['label'].iloc[:500]
+        stratify=labels,
+        random_state=42
     )
 
     # 加载BERT预训练的分词器（Tokenizer）
