@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 
-dataset = pd.read_csv("D:\\code\\八斗\\Week01\\dataset.csv", sep="\t", header=None)
+dataset = pd.read_csv("../Week01/dataset.csv", sep="\t", header=None)
 texts = dataset[0].tolist()
 string_labels = dataset[1].tolist()
 
@@ -22,8 +22,7 @@ vocab_size = len(char_to_index)
 
 max_len = 40
 
-
-class CharGRUDataset(Dataset):
+class CharLSTMDataset(Dataset):
     def __init__(self, texts, labels, char_to_index, max_len):
         self.texts = texts
         self.labels = torch.tensor(labels, dtype=torch.long)
@@ -39,31 +38,30 @@ class CharGRUDataset(Dataset):
         indices += [0] * (self.max_len - len(indices))
         return torch.tensor(indices, dtype=torch.long), self.labels[idx]
 
-
-# --- NEW GRU Model Class ---
-class GRUClassifier(nn.Module):
+# --- NEW LSTM Model Class ---
+class LSTMClassifier(nn.Module):
     def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim):
-        super(GRUClassifier, self).__init__()
+        super(LSTMClassifier, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, batch_first=True)
         self.gru = nn.GRU(embedding_dim, hidden_dim, batch_first=True)
         self.fc = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x):
         embedded = self.embedding(x)
-        gru_out, hidden = self.gru(embedded)
-        out = self.fc(hidden.squeeze(0))
+        lstm_out, hidden_state = self.gru(embedded)
+        out = self.fc(hidden_state.squeeze(0))
         return out
 
-
 # --- Training and Prediction ---
-gru_dataset = CharGRUDataset(texts, numerical_labels, char_to_index, max_len)
-dataloader = DataLoader(gru_dataset, batch_size=32, shuffle=True)
+lstm_dataset = CharLSTMDataset(texts, numerical_labels, char_to_index, max_len)
+dataloader = DataLoader(lstm_dataset, batch_size=32, shuffle=True)
 
 embedding_dim = 64
 hidden_dim = 128
 output_dim = len(label_to_index)
 
-model = GRUClassifier(vocab_size, embedding_dim, hidden_dim, output_dim)
+model = LSTMClassifier(vocab_size, embedding_dim, hidden_dim, output_dim)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
@@ -83,8 +81,7 @@ for epoch in range(num_epochs):
 
     print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {running_loss / len(dataloader):.4f}")
 
-
-def classify_text_gru(text, model, char_to_index, max_len, index_to_label):
+def classify_text_lstm(text, model, char_to_index, max_len, index_to_label):
     indices = [char_to_index.get(char, 0) for char in text[:max_len]]
     indices += [0] * (max_len - len(indices))
     input_tensor = torch.tensor(indices, dtype=torch.long).unsqueeze(0)
@@ -99,13 +96,12 @@ def classify_text_gru(text, model, char_to_index, max_len, index_to_label):
 
     return predicted_label
 
-
 index_to_label = {i: label for label, i in label_to_index.items()}
 
 new_text = "帮我导航到北京"
-predicted_class = classify_text_gru(new_text, model, char_to_index, max_len, index_to_label)
+predicted_class = classify_text_lstm(new_text, model, char_to_index, max_len, index_to_label)
 print(f"输入 '{new_text}' 预测为: '{predicted_class}'")
 
 new_text_2 = "查询明天北京的天气"
-predicted_class_2 = classify_text_gru(new_text_2, model, char_to_index, max_len, index_to_label)
+predicted_class_2 = classify_text_lstm(new_text_2, model, char_to_index, max_len, index_to_label)
 print(f"输入 '{new_text_2}' 预测为: '{predicted_class_2}'")
