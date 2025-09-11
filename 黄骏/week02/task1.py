@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 
 # ... (Data loading and preprocessing remains the same) ...
-dataset = pd.read_csv("dataset.csv", sep="\t", header=None)
+dataset = pd.read_csv("../week01/dataset.csv", sep="\t", header=None)
 texts = dataset[0].tolist()
 string_labels = dataset[1].tolist()
 
